@@ -1,4 +1,4 @@
-export type BlockId = "hero" | "about" | "stack" | "projects" | "stats" | "streak" | "socials" | "wave" | "buttons";
+export type BlockId = "hero" | "features" | "quickstart" | "stack" | "stats" | "buttons" | "wave";
 export type ShapeName = "cookie" | "cookie12" | "clover" | "sunny" | "flower" | "pill" | "soft" | "gem";
 export type SchemeName = "tonalSpot" | "vibrant" | "expressive" | "fidelity" | "monochrome";
 export type Lang = "en" | "ru";
@@ -13,20 +13,23 @@ export interface LinkButton extends Item {
   style: "filled" | "tonal";
 }
 
-export interface Social {
+export interface FeatureItem {
   icon: string;
-  url: string;
+  title: string;
+  desc: string;
+  shape?: ShapeName;
 }
 
-export interface Override {
-  text?: string;
-  icon?: string;
-  shape?: ShapeName;
+export interface QuickstartStep {
+  label: string;
+  code: string;
 }
 
 export interface Config {
   version: 1;
-  login: string;
+  repoUrl: string;
+  owner: string;
+  repo: string;
   seed: string;
   seedFromAvatar?: boolean;
   scheme: SchemeName;
@@ -35,75 +38,104 @@ export interface Config {
   order: BlockId[];
   hidden: BlockId[];
   hero: {
-    greeting: string;
-    name: string;
+    tag: string;
+    title: string;
     subtitle: string;
+    license?: string;
+    release?: string;
     typing: boolean;
-    avatarShape: ShapeName;
+    logoShape: ShapeName;
     chips: Item[];
+    author?: string;
   };
-  about: { title: string; items: Item[] };
-  stack: { title: string; groups: { title: string; items: Item[] }[] };
-  projects: {
-    source: "pinned" | "manual";
-    repos: string[];
-    overrides: Record<string, Override>;
-    empty: string;
-    fork: string;
+  features: {
+    title: string;
+    items: FeatureItem[];
+  };
+  quickstart: {
+    title: string;
+    terminalTitle: string;
+    steps: QuickstartStep[];
+  };
+  stack: {
+    title: string;
+    groups: { title: string; items: Item[] }[];
   };
   stats: {
     title: string;
     stars: string;
-    contributions: string;
-    repos: string;
-    followers: string;
-    calendar: string;
-    weekdays: string;
+    forks: string;
+    issues: string;
+    watchers: string;
     languages: string;
     showLanguages: boolean;
   };
-  streak: { title: string; current: string; longest: string; days: string };
-  socials: {
-    items: Social[];
-    variant: "icon" | "chip";
-    fill: "tonal" | "filled" | "outlined" | "brand";
-    shape?: ShapeName;
+  buttons: {
+    items: LinkButton[];
     card?: boolean;
   };
-  buttons: { items: LinkButton[]; card?: boolean };
 }
 
-export interface Repo {
+export interface RepoData {
+  owner: string;
   name: string;
-  url: string;
-  text: string;
-  fork: boolean;
+  fullName: string;
+  description: string;
   stars: number;
+  forks: number;
+  issues: number;
+  watchers: number;
+  license: string | null;
+  release?: string | null;
   language: string | null;
   topics: string[];
-}
-
-export interface Day {
-  c: number;
-  day: number;
-  today?: boolean;
-}
-
-export interface Data {
-  stars: number;
-  contributions: number;
-  repos: number;
-  followers: number;
+  homepage: string | null;
+  defaultBranch: string;
   languages: [string, number][];
-  days: (Day | null)[][];
-  streak: { current: number; longest: number };
-  pins: Repo[];
-  all: Repo[];
+  readmeRaw?: string;
+  manifestDeps?: string[];
+}
+
+export type Data = RepoData;
+
+export interface Palette {
+  primary: string;
+  onPrimary: string;
+  primaryContainer: string;
+  onPrimaryContainer: string;
+  secondary: string;
+  onSecondary: string;
+  secondaryContainer: string;
+  onSecondaryContainer: string;
+  tertiary: string;
+  onTertiary: string;
+  tertiaryContainer: string;
+  onTertiaryContainer: string;
+  error: string;
+  onError: string;
+  errorContainer: string;
+  onErrorContainer: string;
+  surface: string;
+  surfaceDim: string;
+  surfaceBright: string;
+  surfaceContainerLowest: string;
+  surfaceContainerLow: string;
+  surfaceContainer: string;
+  surfaceContainerHigh: string;
+  surfaceContainerHighest: string;
+  onSurface: string;
+  onSurfaceVariant: string;
+  outline: string;
+  outlineVariant: string;
+  inverseSurface: string;
+  inverseOnSurface: string;
+  inversePrimary: string;
+  scrim: string;
+  shadow: string;
+  [key: string]: string;
 }
 
 export interface Icons {
   symbol: Record<string, string>;
   brand: Record<string, { t: string; d: string; c?: string }>;
 }
-
-export type Palette = Record<string, string>;

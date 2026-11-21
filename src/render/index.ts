@@ -1,21 +1,25 @@
-import { about, AUTO_ICONS, buttons, card, credit, hero, projectList, projectView, SITE_URL, socials, stack, stats, streak, wave } from "./blocks";
+import { AUTO_ICONS, buttons, credit, features, hero, quickstart, REPO_URL, SITE_URL, stack, stats, wave } from "./blocks";
 import { esc } from "./kit";
 import { palette } from "./palette";
 import type { BlockId, Config, Data, Icons, Lang } from "./types";
 
 export * from "./types";
 export { palette } from "./palette";
-export { REPO_URL, SITE_URL } from "./blocks";
+export { LANG_ICONS, REPO_URL, SITE_URL } from "./blocks";
 
-export const BLOCKS: BlockId[] = ["hero", "socials", "about", "stack", "projects", "stats", "streak", "wave", "buttons"];
+export const BLOCKS: BlockId[] = ["hero", "features", "quickstart", "stack", "stats", "buttons", "wave"];
 
 // Defaults
-export function defaults(login: string, lang: Lang): Config {
+export function defaults(repoSlug: string, lang: Lang): Config {
   const ru = lang === "ru";
+  const [owner = "northerncatboy", repo = "expressive-repo"] = repoSlug.includes("/") ? repoSlug.split("/") : ["northerncatboy", repoSlug || "expressive-repo"];
+
   return {
     version: 1,
-    login,
-    seed: "#FF5CA8",
+    repoUrl: `${owner}/${repo}`,
+    owner,
+    repo,
+    seed: "#6750A4",
     seedFromAvatar: true,
     scheme: "tonalSpot",
     motion: true,
@@ -23,170 +27,167 @@ export function defaults(login: string, lang: Lang): Config {
     order: [...BLOCKS],
     hidden: [],
     hero: {
-      greeting: ru ? "Привет, я" : "Hi, I'm",
-      name: "",
-      subtitle: ru ? "Делаю интерфейсы и небольшие полезные утилиты." : "I build interfaces and small useful tools.",
+      tag: "",
+      title: repo,
+      subtitle: ru ? "Генератор красивых README для репозиториев в стиле Material 3 Expressive." : "Repository README generator in Material 3 Expressive style.",
+      license: "MIT",
+      release: "v1.0.0",
       typing: true,
-      avatarShape: "cookie12",
+      logoShape: "cookie12",
       chips: [
-        { icon: "location_on", label: ru ? "Земля" : "Earth" },
-        { icon: "code", label: "TypeScript · Python" },
+        { icon: "star", label: "★ 340" },
+        { icon: "fork_right", label: "⑂ 48" },
+        { icon: "sell", label: "v1.0.0" },
+        { icon: "license", label: "MIT" },
+        { icon: "brand:typescript", label: "TypeScript" },
       ],
     },
-    about: {
-      title: ru ? "Обо мне" : "About me",
+    features: {
+      title: ru ? "Ключевые возможности" : "Key Features",
       items: [
-        { icon: "person", label: ru ? "Разработчик и дизайнер" : "Developer and designer" },
-        { icon: "code", label: ru ? "В основном фронтенд" : "Mostly frontend" },
-        { icon: "palette", label: ru ? "Люблю Material Design" : "Into Material Design" },
+        {
+          icon: "palette",
+          title: ru ? "Material 3 Дизайн" : "Material 3 Design",
+          desc: ru ? "Гармоничная тональная палитра, адаптивные контейнеры и выразительные формы." : "Harmonious tonal color palettes, adaptive containers, and expressive shapes.",
+          shape: "cookie",
+        },
+        {
+          icon: "bolt",
+          title: ru ? "Мгновенное превью" : "Instant Live Preview",
+          desc: ru ? "Интерактивный редактор блоков с drag-and-drop и светлой/тёмной темой." : "Interactive block editor with drag-and-drop and real-time light/dark themes.",
+          shape: "flower",
+        },
+        {
+          icon: "widgets",
+          title: ru ? "Адаптивные SVG-карточки" : "Adaptive SVG Cards",
+          desc: ru ? "Чёткое отображение на любых экранах и нативная поддержка тем GitHub." : "Crisp rendering across any display with native GitHub theme switching.",
+          shape: "sunny",
+        },
+        {
+          icon: "terminal",
+          title: ru ? "Автоматический парсер" : "Automatic Parser",
+          desc: ru ? "Извлекает возможности, стек и команды установки прямо из README репозитория." : "Extracts features, tech stack, and install commands directly from the repo README.",
+          shape: "clover",
+        },
+      ],
+    },
+    quickstart: {
+      title: ru ? "Быстрый старт" : "Quick Start",
+      terminalTitle: "bash",
+      steps: [
+        { label: ru ? "Клонирование репозитория" : "Clone repository", code: `git clone https://github.com/${owner}/${repo}.git` },
+        { label: ru ? "Установка зависимостей" : "Install dependencies", code: "npm install" },
+        { label: ru ? "Запуск сервера разработки" : "Start development server", code: "npm run dev" },
       ],
     },
     stack: {
-      title: ru ? "Стек" : "Tech stack",
+      title: ru ? "Стек технологий" : "Tech Stack",
       groups: [
-        { title: "Main", items: [{ icon: "brand:typescript", label: "TypeScript" }, { icon: "brand:react", label: "React" }, { icon: "brand:python", label: "Python" }] },
-        { title: "Tools", items: [{ icon: "brand:git", label: "Git" }, { icon: "brand:figma", label: "Figma" }, { icon: "brand:githubactions", label: "GitHub Actions" }] },
+        {
+          title: ru ? "Языки" : "Languages",
+          items: [
+            { icon: "brand:typescript", label: "TypeScript" },
+            { icon: "brand:html5", label: "HTML" },
+            { icon: "brand:css", label: "CSS" },
+            { icon: "brand:javascript", label: "JavaScript" },
+          ],
+        },
+        {
+          title: ru ? "Фреймворки и экосистема" : "Frameworks & Ecosystem",
+          items: [
+            { icon: "brand:react", label: "React" },
+            { icon: "brand:vite", label: "Vite" },
+            { icon: "palette", label: "Material You" },
+            { icon: "brand:git", label: "Git" },
+            { icon: "brand:githubactions", label: "GitHub Actions" },
+          ],
+        },
       ],
-    },
-    projects: {
-      source: "pinned",
-      repos: [],
-      overrides: {},
-      empty: ru ? "Описания пока нет." : "No description yet.",
-      fork: "Fork",
     },
     stats: {
-      title: ru ? "Активность на GitHub" : "GitHub activity",
-      stars: ru ? "Звёзд получено" : "Stars earned",
-      contributions: ru ? "Вкладов за год" : "Contributions this year",
-      repos: ru ? "Публичных репо" : "Public repos",
-      followers: ru ? "Подписчиков" : "Followers",
-      calendar: ru ? "Последние 21 день" : "Last 21 days",
-      weekdays: ru ? "ВПВСЧПС" : "SMTWTFS",
-      languages: ru ? "Языки в моих репозиториях" : "Languages across my repositories",
+      title: ru ? "Показатели репозитория" : "Repository Metrics",
+      stars: ru ? "Звёзд" : "Stars",
+      forks: ru ? "Форков" : "Forks",
+      issues: ru ? "Задач" : "Issues",
+      watchers: ru ? "Подписчиков" : "Watchers",
+      languages: ru ? "Языки репозитория" : "Language Distribution",
       showLanguages: true,
-    },
-    streak: {
-      title: ru ? "Серия" : "Streak",
-      current: ru ? "Текущая серия" : "Current streak",
-      longest: ru ? "Рекорд за год" : "Longest this year",
-      days: ru ? "дн." : "days",
-    },
-    socials: {
-      items: [
-        { icon: "brand:telegram", url: "https://t.me/" },
-        { icon: "brand:discord", url: "https://discord.com/" },
-        { icon: "brand:x", url: "https://x.com/" },
-      ],
-      variant: "chip",
-      fill: "tonal",
-      card: true,
     },
     buttons: {
       items: [
-        { icon: "language", label: ru ? "Мой сайт" : "My website", url: "https://example.com", style: "filled" },
-        { icon: "book_2", label: ru ? "Все репозитории" : "All repositories", url: "", style: "tonal" },
+        { icon: "language", label: ru ? "Демо" : "Live Demo", url: "https://example.com", style: "filled" },
+        { icon: "book_2", label: ru ? "Документация" : "Documentation", url: "", style: "tonal" },
+        { icon: "star", label: ru ? "Поставить звезду" : "Star on GitHub", url: `https://github.com/${owner}/${repo}`, style: "tonal" },
       ],
+      card: false,
     },
   };
 }
 
-// Streak
-export function streakOf(counts: number[], todayIncluded = true) {
-  let longest = 0;
-  let run = 0;
-  for (const c of counts) {
-    run = c > 0 ? run + 1 : 0;
-    longest = Math.max(longest, run);
-  }
-  let current = 0;
-  let i = counts.length - 1;
-  if (todayIncluded && i >= 0 && counts[i] === 0) i--;
-  for (; i >= 0 && counts[i] > 0; i--) current++;
-  return { current, longest };
-}
-
-// Files
-export function slug(name: string) {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "x";
-}
-
-export function buttonUrl(c: Config, url: string) {
-  return url || `https://github.com/${c.login}?tab=repositories`;
-}
-
+// Icons
 export function usedIcons(c: Config, d: Data) {
-  const names = new Set<string>(["favorite", "code", "monitoring", "star", "commit", "book_2", "group", "arrow_outward", "person", ...AUTO_ICONS]);
-  for (const x of c.hero.chips) names.add(x.icon);
-  for (const x of c.about.items) names.add(x.icon);
-  for (const g of c.stack.groups) for (const x of g.items) names.add(x.icon);
-  for (const x of c.buttons.items) names.add(x.icon);
-  for (const x of c.socials.items) names.add(x.icon);
-  names.add("local_fire_department");
-  names.add("trophy");
-  for (const o of Object.values(c.projects.overrides)) if (o.icon) names.add(o.icon);
-  projectList(c, d).forEach((r, n) => names.add(projectView(c, r, n).icon));
-  return [...names].filter(Boolean);
+  const set = new Set<string>(AUTO_ICONS);
+  for (const chip of (c.hero?.chips || [])) set.add(chip.icon);
+  for (const f of (c.features?.items || [])) set.add(f.icon);
+  for (const g of (c.stack?.groups || [])) for (const it of (g.items || [])) set.add(it.icon);
+  for (const b of (c.buttons?.items || [])) set.add(b.icon);
+  return [...set].filter(Boolean);
 }
 
 export function pickIcons(all: Icons, names: string[]): Icons {
-  const out: Icons = { symbol: {}, brand: {} };
-  for (const n of names) {
-    if (n.startsWith("brand:")) {
-      const b = all.brand[n.slice(6)];
-      if (b) out.brand[n.slice(6)] = { t: b.t, d: b.d, c: b.c };
+  const symbol: Record<string, string> = {};
+  const brand: Record<string, { t: string; d: string; c?: string }> = {};
+  for (const name of names) {
+    if (name.startsWith("brand:")) {
+      const k = name.slice(6);
+      if (all.brand[k]) brand[k] = all.brand[k];
     } else {
-      if (all.symbol[n]) out.symbol[n] = all.symbol[n];
-      if (all.symbol[n + "#fill"]) out.symbol[n + "#fill"] = all.symbol[n + "#fill"];
+      if (all.symbol[name]) symbol[name] = all.symbol[name];
+      if (all.symbol[name + "#fill"]) symbol[name + "#fill"] = all.symbol[name + "#fill"];
     }
+  }
+  return { symbol, brand };
+}
+
+// Render
+export function render(c: Config, d: Data, i: Icons, ava: string | null, themes: ("light" | "dark")[] = ["light", "dark"]) {
+  const out: Record<string, string> = {};
+  for (const theme of themes) {
+    const dark = theme === "dark";
+    const p = palette(c.seed, c.scheme, dark);
+    const ctx = { c, d, p, i };
+    const suf = `-${theme}.svg`;
+
+    out[`assets/hero${suf}`] = hero(ctx, ava);
+    out[`assets/features${suf}`] = features(ctx);
+    out[`assets/quickstart${suf}`] = quickstart(ctx);
+    out[`assets/stack${suf}`] = stack(ctx);
+    out[`assets/stats${suf}`] = stats(ctx);
+    out[`assets/wave${suf}`] = wave(ctx);
+    out[`assets/credit${suf}`] = credit(ctx);
+
+    const b = buttons(ctx);
+    for (const [k, v] of Object.entries(b)) out[`assets/${k}${suf}`] = v;
   }
   return out;
 }
 
-const filled = new WeakMap<Icons, Icons>();
-
-export function withFill(icons: Icons): Icons {
-  let hit = filled.get(icons);
-  if (hit && Object.keys(hit.symbol).length === Object.keys(icons.symbol).length) return hit;
-  const symbol = { ...icons.symbol };
-  for (const [k, v] of Object.entries(icons.symbol)) if (k.endsWith("#fill")) symbol[k.slice(0, -5)] = v;
-  hit = { brand: icons.brand, symbol };
-  filled.set(icons, hit);
-  return hit;
-}
-
-export function render(c: Config, d: Data, all: Icons, avatar: string | null, themes: ("light" | "dark")[] = ["light", "dark"]) {
-  const icons = c.iconFill === false ? all : withFill(all);
-  const files: Record<string, string> = {};
-  const repos = projectList(c, d);
-  for (const theme of themes) {
-    const p = palette(c.seed, c.scheme, theme === "dark");
-    const ctx = { c, d, p, i: icons };
-    const put = (name: string, svg: string) => (files[`assets/${name}-${theme}.svg`] = svg);
-    put("hero", hero(ctx, avatar));
-    put("about", about(ctx));
-    put("stack", stack(ctx));
-    put("stats", stats(ctx));
-    put("wave", wave(ctx));
-    put("streak", streak(ctx));
-    for (const [name, svg] of Object.entries(socials(ctx))) put(name, svg);
-    for (const [name, svg] of Object.entries(buttons(ctx))) put(name, svg);
-    put("credit", credit(ctx));
-    repos.forEach((r, n) => put(`project-${slug(r.name)}`, card(ctx, r, n)));
-  }
-  return files;
-}
-
 // Readme
+export function slug(s: string) {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+function buttonUrl(c: Config, url: string) {
+  if (url) return url;
+  return `https://github.com/${c.owner}/${c.repo}`;
+}
+
 function linkRow(files: Record<string, string>, prefix: string, links: { url: string; alt: string }[], loose: string, sep: string) {
-  const width = (name: string) => Number(/width="([\d.]+)"/.exec(files[`assets/${name}-light.svg`] ?? "")?.[1] ?? 0);
   if (files[`assets/${prefix}-l-light.svg`]) {
-    const pct = (name: string) => `${(Math.floor((width(name) / 840) * 100000) / 1000).toFixed(3)}%`;
-    return (
-      pic(`${prefix}-l`, "", pct(`${prefix}-l`)) +
-      links.map((l, n) => `<a href="${esc(l.url)}">${pic(`${prefix}-${n + 1}`, l.alt, pct(`${prefix}-${n + 1}`))}</a>`).join("") +
-      pic(`${prefix}-r`, "", pct(`${prefix}-r`))
-    );
+    const row = [pic(`${prefix}-l`, "", loose)];
+    links.forEach((l, n) => row.push(`<a href="${esc(l.url)}">${pic(`${prefix}-${n + 1}`, l.alt, loose)}</a>`));
+    row.push(pic(`${prefix}-r`, "", loose));
+    return row.join("");
   }
   return links.map((l, n) => `<a href="${esc(l.url)}">${pic(`${prefix}-${n + 1}`, l.alt, loose)}</a>`).join(sep);
 }
@@ -199,29 +200,20 @@ function pic(name: string, alt: string, width = "100%") {
 }
 
 export function readme(c: Config, d: Data, files: Record<string, string>) {
-  const repos = projectList(c, d);
   const parts: string[] = [];
   for (const id of c.order) {
     if (c.hidden.includes(id)) continue;
-    if (id === "hero") parts.push(pic("hero", `${c.hero.greeting} ${c.hero.name || c.login}`));
-    if (id === "about") parts.push(pic("about", c.about.title));
+    if (id === "hero") parts.push(pic("hero", c.hero.title || c.repo));
+    if (id === "features") parts.push(pic("features", c.features.title));
+    if (id === "quickstart") parts.push(pic("quickstart", c.quickstart.title));
     if (id === "stack") parts.push(pic("stack", c.stack.title));
     if (id === "stats") parts.push(pic("stats", c.stats.title));
     if (id === "wave") parts.push(pic("wave", ""));
-    if (id === "streak") parts.push(pic("streak", c.streak.title));
-    if (id === "socials" && c.socials.items.length) {
-      const links = c.socials.items.map((s) => ({ url: s.url, alt: s.icon.replace("brand:", "") }));
-      parts.push(linkRow(files, "social", links, c.socials.variant === "chip" ? "auto" : "56", "&nbsp;"));
-    }
-    if (id === "projects") {
-      const cards = repos.map((r) => `<a href="${esc(r.url)}">${pic(`project-${slug(r.name)}`, r.name, "49%")}</a>`);
-      for (let n = 0; n < cards.length; n += 2) parts.push(cards.slice(n, n + 2).join("&nbsp;"));
-    }
     if (id === "buttons" && c.buttons.items.length) {
       const links = c.buttons.items.map((b) => ({ url: buttonUrl(c, b.url), alt: b.label }));
       parts.push(linkRow(files, "button", links, "auto", "&nbsp;&nbsp;"));
     }
   }
-  parts.push(`<a href="${SITE_URL}?from=${encodeURIComponent(c.login)}">${pic("credit", "Made with Expressive Profile", "auto")}</a>`);
+  parts.push(`<a href="${SITE_URL}?repo=${encodeURIComponent(c.owner + "/" + c.repo)}">${pic("credit", "Made with Expressive Repo", "auto")}</a>`);
   return '<div align="center">\n\n' + parts.join("\n\n") + "\n\n</div>\n";
 }

@@ -7,3 +7,5 @@ node_modules
 /src/render/fontdata.ts
 /src/render/core-icons.json
 .project-status.md
+.PROJECT_MAP.md
+.SESSION_LOG.md

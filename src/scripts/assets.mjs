@@ -3,7 +3,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as si from "simple-icons";
 
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const root = join(dirname(fileURLToPath(import.meta.url)), "../..");
 const symDir = join(root, "node_modules/@material-symbols/svg-400/rounded");
 const src = join(root, "src/render");
 const pub = join(root, "public");
@@ -11,15 +11,15 @@ mkdirSync(pub, { recursive: true });
 
 // Fonts
 const fonts = {
-  FONT: readFileSync(join(root, "fonts/GoogleSansFlex-subset.woff2")).toString("base64"),
-  FONT_CYR: readFileSync(join(root, "fonts/RobotoFlex-cyrillic.woff2")).toString("base64"),
+  FONT: readFileSync(join(root, "src/fonts/GoogleSansFlex-subset.woff2")).toString("base64"),
+  FONT_CYR: readFileSync(join(root, "src/fonts/RobotoFlex-cyrillic.woff2")).toString("base64"),
 };
 writeFileSync(
   join(src, "fontdata.ts"),
   Object.entries(fonts).map(([k, v]) => `export const ${k} = "${v}";`).join("\n") + "\n",
 );
-copyFileSync(join(root, "fonts/GoogleSansFlex-subset.woff2"), join(pub, "gsf.woff2"));
-copyFileSync(join(root, "fonts/RobotoFlex-cyrillic.woff2"), join(pub, "rf-cyr.woff2"));
+copyFileSync(join(root, "src/fonts/GoogleSansFlex-subset.woff2"), join(pub, "gsf.woff2"));
+copyFileSync(join(root, "src/fonts/RobotoFlex-cyrillic.woff2"), join(pub, "rf-cyr.woff2"));
 
 // Symbols
 const symbols = {};
@@ -46,7 +46,7 @@ const coreSymbols = [
   "palette", "bolt", "arrow_outward", "favorite", "schedule", "download", "person", "location_on",
   "calendar_month", "deployed_code", "school", "work", "mail", "rocket_launch", "brush", "public",
   "pets", "coffee", "headphones", "photo_camera", "add", "link", "cloud", "database",
-  "translate", "home", "lightbulb", "verified", "psychology", "dark_mode", "light_mode", "drag_indicator", "edit", "visibility_off", "visibility", "close", "delete", "search", "check", "restart_alt", "image", "open_in_new", "upload", "keyboard_arrow_down", "chevron_right", "shuffle", "arrow_back", "contrast", "local_fire_department", "trophy", "share", "content_copy", "wallpaper", "dashboard", "add_photo_alternate", "arrow_forward", "edit_square", "auto_awesome_mosaic", "info", "format_paint", "account_circle", "shapes", "interests", "animation", "folder_open", "progress_activity",
+  "translate", "home", "lightbulb", "verified", "license", "sell", "tag", "psychology", "dark_mode", "light_mode", "drag_indicator", "edit", "visibility_off", "visibility", "close", "delete", "search", "check", "restart_alt", "image", "open_in_new", "upload", "keyboard_arrow_down", "chevron_right", "shuffle", "arrow_back", "contrast", "local_fire_department", "trophy", "share", "content_copy", "wallpaper", "dashboard", "add_photo_alternate", "arrow_forward", "edit_square", "auto_awesome_mosaic", "info", "format_paint", "account_circle", "shapes", "interests", "animation", "folder_open", "progress_activity",
 ];
 const coreBrands = [
   "rust", "dotnet", "python", "typescript", "javascript", "nextdotjs", "openjdk", "hyprland",

@@ -32,7 +32,7 @@ const ROLES = [
 export function palette(seed: string, scheme: SchemeName, dark: boolean): Palette {
   const Scheme = SCHEMES[scheme] ?? SchemeTonalSpot;
   const s = new Scheme(Hct.fromInt(argbFromHex(seed)), dark, 0) as unknown as Record<string, number>;
-  const out: Palette = {};
+  const out = {} as Palette;
   for (const r of ROLES) out[r] = hexFromArgb(s[r]);
   return out;
 }

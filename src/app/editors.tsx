@@ -1,12 +1,12 @@
 import { AnimatePresence, motion, Reorder, useDragControls } from "motion/react";
 import { useState } from "react";
-import { projectList, projectView } from "../render/blocks";
-import type { Config, Data, Repo, SchemeName } from "../render";
+import type { Config, Data, FeatureItem, QuickstartStep, SchemeName } from "../render";
 import type { Dict } from "./i18n";
 import { activePreset, applyPreset, PRESETS, type PresetId } from "./presets";
+import { detectTechStack } from "./data";
 import { bouncy, Button, Field, Glyph, IconButton, IconSelect, ItemList, Section, Segmented, ShapePicker, spring, Switch } from "./ui";
 
-export type SheetId = "hero" | "about" | "stack" | "projects" | "stats" | "streak" | "socials" | "buttons" | "style";
+export type SheetId = "hero" | "features" | "quickstart" | "stack" | "stats" | "buttons" | "style";
 
 interface Props {
   c: Config;
@@ -16,51 +16,192 @@ interface Props {
 }
 
 // Hero
+const LICENSES = ["MIT", "Apache-2.0", "GPL-3.0", "BSD-3-Clause", "MPL-2.0", "Unlicense"];
+
 function Hero({ c, set, t }: Props) {
   const h = c.hero;
   const up = (v: Partial<Config["hero"]>) => set((c) => ({ ...c, hero: { ...c.hero, ...v } }));
+
+  const currentLicense = h.license ?? (h.chips.find((ch) => ch.icon === "license" || ch.icon === "verified")?.label ?? "");
+  const currentRelease = h.release ?? (h.chips.find((ch) => ch.icon === "sell" || ch.icon === "tag")?.label ?? "");
+
+  const updateLicense = (val: string) => {
+    const clean = val.trim();
+    let nextChips = [...h.chips];
+    const idx = nextChips.findIndex((ch) => ch.icon === "license" || ch.icon === "verified");
+    if (idx >= 0) {
+      if (clean) nextChips[idx] = { icon: "license", label: clean };
+      else nextChips.splice(idx, 1);
+    } else if (clean) {
+      nextChips.push({ icon: "license", label: clean });
+    }
+    up({ license: val, chips: nextChips });
+  };
+
+  const updateRelease = (val: string) => {
+    const clean = val.trim();
+    let nextChips = [...h.chips];
+    const idx = nextChips.findIndex((ch) => ch.icon === "sell" || ch.icon === "tag");
+    if (idx >= 0) {
+      if (clean) nextChips[idx] = { icon: "sell", label: clean };
+      else nextChips.splice(idx, 1);
+    } else if (clean) {
+      const licIdx = nextChips.findIndex((ch) => ch.icon === "license" || ch.icon === "verified");
+      if (licIdx >= 0) nextChips.splice(licIdx, 0, { icon: "sell", label: clean });
+      else nextChips.push({ icon: "sell", label: clean });
+    }
+    up({ release: val, chips: nextChips });
+  };
+
+  const onChipsChange = (nextChips: typeof h.chips) => {
+    const lic = nextChips.find((ch) => ch.icon === "license" || ch.icon === "verified")?.label ?? "";
+    const rel = nextChips.find((ch) => ch.icon === "sell" || ch.icon === "tag")?.label ?? "";
+    up({ chips: nextChips, license: lic, release: rel });
+  };
+
   return (
     <>
       <Section>
-        <Field label={t.greeting} value={h.greeting} onChange={(greeting) => up({ greeting })} maxLength={40} />
-        <Field label={t.name} value={h.name} placeholder={c.login || t.namePlaceholder} onChange={(name) => up({ name })} maxLength={32} />
+        <Field label={t.tag} value={h.tag} onChange={(tag) => up({ tag })} maxLength={32} />
+        <Field label={t.title} value={h.title} placeholder={c.repo || "Repository"} onChange={(title) => up({ title })} maxLength={36} />
         <Field label={t.subtitle} value={h.subtitle} onChange={(subtitle) => up({ subtitle })} multiline maxLength={140} />
+        <Field label={t.license} value={currentLicense} placeholder={t.licensePlaceholder} onChange={updateLicense} maxLength={32} />
+        <div className="chips-wrap" style={{ marginTop: -4, marginBottom: 8 }}>
+          {LICENSES.map((lic) => (
+            <button
+              key={lic}
+              type="button"
+              className={`filter-chip${currentLicense.toUpperCase() === lic.toUpperCase() ? " on" : ""}`}
+              onClick={() => updateLicense(lic)}
+            >
+              {lic}
+            </button>
+          ))}
+        </div>
+        <Field label={t.release} value={currentRelease} placeholder={t.releasePlaceholder} onChange={updateRelease} maxLength={24} />
         <Switch label={t.typing} value={h.typing} onChange={(typing) => up({ typing })} />
       </Section>
-      <Section title={t.avatarShape}>
-        <ShapePicker value={h.avatarShape} onChange={(s) => up({ avatarShape: s ?? "cookie12" })} />
+      <Section title={t.logoShape}>
+        <ShapePicker value={h.logoShape} onChange={(s) => up({ logoShape: s ?? "cookie12" })} />
       </Section>
       <Section title={t.chips}>
-        <ItemList items={h.chips} onChange={(chips) => up({ chips })} t={t} max={4} fresh={{ icon: "star", label: "New" }} />
+        <ItemList items={h.chips} onChange={onChipsChange} t={t} max={7} fresh={{ icon: "star", label: "★ 1.0k" }} />
       </Section>
     </>
   );
 }
 
-// About
-function About({ c, set, t }: Props) {
-  const up = (v: Partial<Config["about"]>) => set((c) => ({ ...c, about: { ...c.about, ...v } }));
+// Features
+function Features({ c, set, t }: Props) {
+  const f = c.features;
+  const up = (v: Partial<Config["features"]>) => set((c) => ({ ...c, features: { ...c.features, ...v } }));
+  const items = f.items;
+
+  const upItem = (idx: number, patch: Partial<FeatureItem>) => {
+    up({ items: items.map((it, i) => (i === idx ? { ...it, ...patch } : it)) });
+  };
+
+  const removeItem = (idx: number) => {
+    up({ items: items.filter((_, i) => i !== idx) });
+  };
+
   return (
     <>
       <Section>
-        <Field label={t.title} value={c.about.title} onChange={(title) => up({ title })} maxLength={40} />
+        <Field label={t.title} value={f.title} onChange={(title) => up({ title })} maxLength={40} />
       </Section>
-      <Section title={t.items}>
-        <ItemList items={c.about.items} onChange={(items) => up({ items })} t={t} max={8} fresh={{ icon: "favorite", label: "" }} />
+      <Section title={t.blocks.features}>
+        <AnimatePresence initial={false}>
+          {items.map((item, idx) => (
+            <motion.div key={idx} className="group-card" layout initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} transition={spring}>
+              <div className="group-head">
+                <IconSelect value={item.icon} onChange={(icon) => upItem(idx, { icon })} t={t} />
+                <Field value={item.title} placeholder={t.featureTitle} onChange={(title) => upItem(idx, { title })} maxLength={32} />
+                <IconButton icon="delete" title={t.remove} onClick={() => removeItem(idx)} />
+              </div>
+              <Field label={t.featureDesc} value={item.desc} placeholder={t.featureDesc} onChange={(desc) => upItem(idx, { desc })} multiline maxLength={120} />
+              <div className="inline">
+                <span className="field-label">{t.logoShape}</span>
+                <ShapePicker value={item.shape} onChange={(shape) => upItem(idx, { shape })} />
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+        {items.length < 6 && (
+          <Button
+            kind="outlined"
+            icon="add"
+            onClick={() =>
+              up({
+                items: [
+                  ...items,
+                  { icon: "widgets", title: "New Feature", desc: "Description of this feature and what it provides.", shape: "cookie" },
+                ],
+              })
+            }
+          >
+            {t.addFeature}
+          </Button>
+        )}
+      </Section>
+    </>
+  );
+}
+
+// Quickstart
+function Quickstart({ c, set, t }: Props) {
+  const q = c.quickstart;
+  const up = (v: Partial<Config["quickstart"]>) => set((c) => ({ ...c, quickstart: { ...c.quickstart, ...v } }));
+  const steps = q.steps;
+
+  const upStep = (idx: number, patch: Partial<QuickstartStep>) => {
+    up({ steps: steps.map((s, i) => (i === idx ? { ...s, ...patch } : s)) });
+  };
+
+  return (
+    <>
+      <Section>
+        <Field label={t.title} value={q.title} onChange={(title) => up({ title })} maxLength={40} />
+        <Field label={t.terminalTitle} value={q.terminalTitle} onChange={(terminalTitle) => up({ terminalTitle })} maxLength={24} />
+      </Section>
+      <Section title={t.blocks.quickstart}>
+        <AnimatePresence initial={false}>
+          {steps.map((step, idx) => (
+            <motion.div key={idx} className="group-card" layout initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} transition={spring}>
+              <div className="group-head">
+                <Field value={step.label} placeholder={t.stepLabel} onChange={(label) => upStep(idx, { label })} maxLength={32} />
+                <IconButton icon="delete" title={t.remove} onClick={() => up({ steps: steps.filter((_, i) => i !== idx) })} />
+              </div>
+              <Field label={t.stepCode} value={step.code} placeholder="npm run dev" onChange={(code) => upStep(idx, { code })} maxLength={80} />
+            </motion.div>
+          ))}
+        </AnimatePresence>
+        {steps.length < 5 && (
+          <Button kind="outlined" icon="add" onClick={() => up({ steps: [...steps, { label: "Run", code: "npm start" }] })}>
+            {t.addStep}
+          </Button>
+        )}
       </Section>
     </>
   );
 }
 
 // Stack
-function Stack({ c, set, t }: Props) {
+function Stack({ c, set, t, d }: Props) {
   const groups = c.stack.groups;
   const up = (v: Partial<Config["stack"]>) => set((c) => ({ ...c, stack: { ...c.stack, ...v } }));
   const upGroup = (i: number, v: Partial<Config["stack"]["groups"][number]>) => up({ groups: groups.map((g, j) => (j === i ? { ...g, ...v } : g)) });
+  const autoDetect = () => {
+    const isRu = /[а-яё]/i.test(c.hero.subtitle || c.stack.title);
+    up({ groups: detectTechStack(d, isRu ? "ru" : "en") });
+  };
   return (
     <>
       <Section>
         <Field label={t.title} value={c.stack.title} onChange={(title) => up({ title })} maxLength={40} />
+        <Button kind="tonal" icon="auto_awesome" onClick={autoDetect}>
+          {t.autoDetectStack}
+        </Button>
       </Section>
       <AnimatePresence initial={false}>
         {groups.map((g, i) => (
@@ -74,111 +215,11 @@ function Stack({ c, set, t }: Props) {
         ))}
       </AnimatePresence>
       {groups.length < 5 && (
-        <Button kind="outlined" icon="add" onClick={() => up({ groups: [...groups, { title: "", items: [] }] })}>
+        <Button kind="outlined" icon="add" onClick={() => up({ groups: [...groups, { title: "Tools", items: [] }] })}>
           {t.addGroup}
         </Button>
       )}
     </>
-  );
-}
-
-// Projects
-function Projects({ c, set, t, d }: Props) {
-  const pr = c.projects;
-  const up = (v: Partial<Config["projects"]>) => set((c) => ({ ...c, projects: { ...c.projects, ...v } }));
-  const [open, setOpen] = useState<string | null>(null);
-  const list = projectList(c, d);
-  const toggle = (name: string) => {
-    const has = pr.repos.includes(name);
-    if (!has && pr.repos.length >= 6) return;
-    up({ repos: has ? pr.repos.filter((r) => r !== name) : [...pr.repos, name] });
-  };
-  return (
-    <>
-      <Section title={t.source}>
-        <Segmented
-          value={pr.source}
-          onChange={(source) => up({ source, repos: source === "manual" && !pr.repos.length ? d.pins.map((r) => r.name) : pr.repos })}
-          options={[["pinned", t.pinned], ["manual", t.manual]]}
-        />
-        {pr.source === "pinned" && <p className="note">{t.pinnedNote}</p>}
-      </Section>
-      {pr.source === "manual" && (
-        <Section title={t.pickRepos}>
-          {d.all.length ? (
-            <div className="chips-wrap">
-              {d.all.map((r) => {
-                const n = pr.repos.indexOf(r.name);
-                return (
-                  <motion.button key={r.name} type="button" layout className={`filter-chip${n >= 0 ? " on" : ""}`} onClick={() => toggle(r.name)} whileTap={{ scale: 0.92 }} transition={bouncy}>
-                    {n >= 0 && <span className="chip-num">{n + 1}</span>}
-                    {r.name}
-                  </motion.button>
-                );
-              })}
-            </div>
-          ) : (
-            <p className="note">{t.noRepos}</p>
-          )}
-        </Section>
-      )}
-      <Section title={t.blocks.projects}>
-        <p className="note">{t.reorderNote}</p>
-        <Reorder.Group
-          axis="y"
-          as="div"
-          className="repo-list"
-          values={list.map((r) => r.name)}
-          onReorder={(repos: string[]) => up({ source: "manual", repos })}
-        >
-          {list.map((r, i) => (
-            <RepoRow key={r.name} repo={r} index={i} c={c} t={t} open={open === r.name} onToggle={() => setOpen(open === r.name ? null : r.name)} up={up} />
-          ))}
-        </Reorder.Group>
-      </Section>
-      <Section>
-        <Field label={t.emptyText} value={pr.empty} onChange={(empty) => up({ empty })} maxLength={60} />
-        <Field label={t.forkLabel} value={pr.fork} onChange={(fork) => up({ fork })} maxLength={12} />
-      </Section>
-    </>
-  );
-}
-
-function RepoRow({ repo: r, index, c, t, open, onToggle, up }: { repo: Repo; index: number; c: Config; t: Dict; open: boolean; onToggle: () => void; up: (v: Partial<Config["projects"]>) => void }) {
-  const controls = useDragControls();
-  const pr = c.projects;
-  const o = pr.overrides[r.name] ?? {};
-  const v = projectView(c, r, index);
-  const setO = (x: Partial<typeof o>) => up({ overrides: { ...pr.overrides, [r.name]: { ...o, ...x } } });
-  return (
-    <Reorder.Item value={r.name} as="div" className={`repo${open ? " open" : ""}`} dragListener={false} dragControls={controls} transition={spring} whileDrag={{ scale: 1.03, zIndex: 5 }}>
-      <div className="repo-head">
-        <span className="grip" onPointerDown={(e) => controls.start(e)} title={t.move}>
-          <Glyph name="drag_indicator" size={20} />
-        </span>
-        <button type="button" className="repo-open" onClick={onToggle}>
-          <span className="repo-icon"><Glyph name={v.icon} size={20} /></span>
-          <span className="repo-name">{r.name}</span>
-          <motion.span animate={{ rotate: open ? 180 : 0 }} transition={bouncy} className="repo-chev">
-            <Glyph name="keyboard_arrow_down" size={22} />
-          </motion.span>
-        </button>
-      </div>
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div className="repo-body" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={spring}>
-            <Field label={t.description} value={o.text ?? ""} placeholder={r.text || c.projects.empty} onChange={(text) => setO({ text })} multiline maxLength={120} />
-            <div className="inline">
-              <span className="field-label">{t.icon}</span>
-              <IconSelect value={o.icon} onChange={(icon) => setO({ icon })} t={t} />
-              {o.icon && <Button kind="text" onClick={() => setO({ icon: undefined })}>{t.auto}</Button>}
-            </div>
-            <span className="field-label">{t.shape}</span>
-            <ShapePicker value={o.shape} onChange={(shape) => setO({ shape })} allowAuto autoLabel={t.auto} />
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </Reorder.Item>
   );
 }
 
@@ -191,74 +232,18 @@ function Stats({ c, set, t }: Props) {
       <Section>
         <Field label={t.title} value={s.title} onChange={(title) => up({ title })} maxLength={40} />
       </Section>
-      <Section title={t.tiles}>
+      <Section title={t.blocks.stats}>
         <div className="grid2">
           <Field value={s.stars} onChange={(stars) => up({ stars })} maxLength={24} />
-          <Field value={s.contributions} onChange={(contributions) => up({ contributions })} maxLength={24} />
-          <Field value={s.repos} onChange={(repos) => up({ repos })} maxLength={24} />
-          <Field value={s.followers} onChange={(followers) => up({ followers })} maxLength={24} />
+          <Field value={s.forks} onChange={(forks) => up({ forks })} maxLength={24} />
+          <Field value={s.issues} onChange={(issues) => up({ issues })} maxLength={24} />
+          <Field value={s.watchers} onChange={(watchers) => up({ watchers })} maxLength={24} />
         </div>
       </Section>
       <Section>
-        <Field label={t.calendar} value={s.calendar} onChange={(calendar) => up({ calendar })} maxLength={30} />
-        <Field label={t.weekdays} value={s.weekdays} onChange={(weekdays) => up({ weekdays })} maxLength={7} />
         <Switch label={t.showLanguages} value={s.showLanguages} onChange={(showLanguages) => up({ showLanguages })} />
         {s.showLanguages && <Field label={t.languagesLabel} value={s.languages} onChange={(languages) => up({ languages })} maxLength={60} />}
       </Section>
-    </>
-  );
-}
-
-// Streak
-function Streak({ c, set, t }: Props) {
-  const s = c.streak;
-  const up = (v: Partial<Config["streak"]>) => set((c) => ({ ...c, streak: { ...c.streak, ...v } }));
-  return (
-    <Section>
-      <Field label={t.title} value={s.title} onChange={(title) => up({ title })} maxLength={40} />
-      <Field label={t.current} value={s.current} onChange={(current) => up({ current })} maxLength={30} />
-      <Field label={t.longest} value={s.longest} onChange={(longest) => up({ longest })} maxLength={30} />
-      <Field label={t.unit} value={s.days} onChange={(days) => up({ days })} maxLength={10} />
-    </Section>
-  );
-}
-
-// Socials
-function Socials({ c, set, t }: Props) {
-  const st = c.socials;
-  const items = st.items.map((s) => ({ icon: s.icon, label: s.url }));
-  const up = (v: Partial<Config["socials"]>) => set((c) => ({ ...c, socials: { ...c.socials, ...v } }));
-  return (
-    <>
-    <Section title={t.socialView}>
-      <Segmented value={st.variant} onChange={(variant) => up({ variant })} options={[["icon", t.socialIcons], ["chip", t.socialChips]]} />
-      <Switch label={t.cardBg} value={!!st.card} onChange={(card) => up({ card })} />
-      <div className="chips-wrap">
-        {(Object.keys(t.socialFills) as Config["socials"]["fill"][]).map((f) => (
-          <motion.button key={f} type="button" layout className={`filter-chip${st.fill === f ? " on" : ""}`} onClick={() => up({ fill: f })} whileTap={{ scale: 0.92 }} transition={bouncy}>
-            {st.fill === f && <Glyph name="check" size={18} />}
-            {t.socialFills[f]}
-          </motion.button>
-        ))}
-      </div>
-    </Section>
-    <Section title={t.shape}>
-      {st.variant === "icon" ? (
-        <ShapePicker value={st.shape} onChange={(shape) => up({ shape })} allowAuto autoLabel={t.mix} />
-      ) : (
-        <Segmented value={st.shape === "soft" ? "soft" : "pill"} onChange={(v) => up({ shape: v === "soft" ? "soft" : undefined })} options={[["pill", t.rounded], ["soft", t.squarish]]} />
-      )}
-    </Section>
-    <Section title={t.socialUrl}>
-      <ItemList
-        items={items}
-        onChange={(v) => up({ items: v.map((i) => ({ icon: i.icon, url: i.label })) })}
-        t={t}
-        max={8}
-        prefer="brands"
-        fresh={{ icon: "brand:github", label: "https://" }}
-      />
-    </Section>
     </>
   );
 }
@@ -286,8 +271,8 @@ function Buttons({ c, set, t }: Props) {
           );
         })}
       </AnimatePresence>
-      {items.length < 4 && (
-        <Button kind="outlined" icon="add" onClick={() => up([...items, { icon: "link", label: "Link", url: "https://", style: "tonal" }])}>
+      {items.length < 5 && (
+        <Button kind="outlined" icon="add" onClick={() => up([...items, { icon: "link", label: "Link", url: "", style: "tonal" }])}>
           {t.add}
         </Button>
       )}
@@ -296,7 +281,7 @@ function Buttons({ c, set, t }: Props) {
 }
 
 // Style
-export const SEEDS = ["#FF5CA8", "#B36CFF", "#5C7CFF", "#2BB3C0", "#3DAA6B", "#C9A800", "#FF8A3D", "#E5484D"];
+export const SEEDS = ["#6750A4", "#FF5CA8", "#B36CFF", "#5C7CFF", "#2BB3C0", "#3DAA6B", "#C9A800", "#FF8A3D"];
 
 function Style({ c, set, t, avatarSeed, onReset, onImage }: Props & { avatarSeed: string | null; onReset: () => void; onImage: (f: File) => void }) {
   const preset = activePreset(c);
@@ -363,12 +348,10 @@ function Style({ c, set, t, avatarSeed, onReset, onImage }: Props & { avatarSeed
 
 export function SheetBody({ id, ...p }: Props & { id: SheetId; avatarSeed: string | null; onReset: () => void; onImage: (f: File) => void }) {
   if (id === "hero") return <Hero {...p} />;
-  if (id === "about") return <About {...p} />;
+  if (id === "features") return <Features {...p} />;
+  if (id === "quickstart") return <Quickstart {...p} />;
   if (id === "stack") return <Stack {...p} />;
-  if (id === "projects") return <Projects {...p} />;
   if (id === "stats") return <Stats {...p} />;
   if (id === "buttons") return <Buttons {...p} />;
-  if (id === "streak") return <Streak {...p} />;
-  if (id === "socials") return <Socials {...p} />;
   return <Style {...p} />;
 }
